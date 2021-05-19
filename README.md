@@ -272,6 +272,9 @@ function MyApp({ Component, pageProps }: AppProps) {
 export default MyApp
 ~~~
 
+# FaunaDB
+<a href="FaunaDB.md">FaunaDB</a>
+
 # Observações
 - Por padrão o next ao inserirmos no source das imagens ele reconhece a pagina public.
 - Biblioteca de icons **react-icons**.
