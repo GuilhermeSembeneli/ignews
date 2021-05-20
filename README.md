@@ -273,7 +273,73 @@ export default MyApp
 ~~~
 
 # FaunaDB
-<a href="FaunaDB.md">FaunaDB</a>
+- <a href="FaunaDB.md">FaunaDB</a>
+
+# NextAuth Callbacks
+1. Com o nextAuth podemos acessar as callbacks que seria quando executamos uma ação, podemos intercepitar por exemplo quando o usúario faz o login ou é redirecionado...
+- Documentação NextAuth Callbacks: **https://next-auth.js.org/configuration/callbacks**
+
+~~~javascript
+//pages/api/auth/[...nextauth].js
+  callbacks: {
+    async signIn(user, account, profile) {
+      return true
+    },
+    async redirect(url, baseUrl) {
+      return baseUrl
+    },
+    async session(session, user) {
+      return session
+    },
+    async jwt(token, user, account, profile, isNewUser) {
+      return token
+    }
+...
+}
+~~~
+
+2. Vamos agora salvar as informações do usúario logado no banco de dados assim que logar.
+- Importe no **[...nextauth].ts** o nosso arquivo **fauna.ts**, também importe dentro do módulo de fauna o **query as q**.
+
+~~~typescript
+import NextAuth from 'next-auth';
+import Providers from 'next-auth/providers'
+
+import {fauna} from '../../../services/fauna';
+import { query as q} from 'faunadb'
+
+export default NextAuth({
+    providers: [
+        Providers.GitHub({
+            clientId: process.env.GITHUB_ID,
+            clientSecret: process.env.GITHUB_SECRET,
+            //permissões que iremos obter do usuario
+            scope: 'read:user'
+        })
+    ],
+    callbacks: {
+        async signIn(user, account, profile){
+            const {email} = user;
+            try {
+                await fauna.query(
+                    //criando uma inserção
+                    q.Create(
+                        q.Collection('users'), //pegando a collection users
+                        {data: { email }}
+                    ) 
+                )
+                return true;
+            } catch {
+                return false;
+            }
+        }
+    }
+})
+~~~
+
+- Se tudo der certo nas collections do Fauna iremos ver o email do usuário.
+
+# Usando operadores logicos com faunaDB
 
 # Observações
 - Por padrão o next ao inserirmos no source das imagens ele reconhece a pagina public.
