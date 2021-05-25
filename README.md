@@ -340,8 +340,51 @@ export default NextAuth({
 - Se tudo der certo nas collections do Fauna iremos ver o email do usuário.
 
 # Usando operadores logicos com faunaDB
+~~~javascript
+async signIn(user, account, profile) {
+            const { email } = user;
+            try {
+                await fauna.query(
+                    //usando operadores logicos do Fauna
+                    q.If( //se 
+                        q.Not( //não
+                            q.Exists(  //existe um usuario por email que
+                                q.Match( //em que realiza um match com
+                                    q.Index('user_by_email'), //index que a gente criou lá no faunadb
+                                    q.Casefold(user.email) //que é igual ao email 
+                                )
+                            )
+                        ),
+                        //execute (if):
+                        //criando uma inserção
+                        q.Create(
+                            q.Collection('users'), //pegando a collection users
+                            { data: { email } }
+                        ),
+                        //se não (else):
+                        //seleciona um usuario que faz um match com o email
+                        q.Get(
+                            q.Match(
+                                q.Index('user_by_email'),
+                                q.Casefold(user.email)
+                            )
+                        ) //como se fosse um select
+                    )
+                )
+                return true;
+            } catch {
+                return false;
+            }
+        }
+~~~
+
+# Checkout Session com Strapi
+1. Precisamos realizar um post na sdk do Strapi;
+- Para isso temos que criar dentro da pasta api um novo arquivo chamado subscribe.ts;
+- Dentro da rota subscribe vamos criar uma rota de post;
 
 # Observações
 - Por padrão o next ao inserirmos no source das imagens ele reconhece a pagina public.
 - Biblioteca de icons **react-icons**.
 - Chamadas a api pelo next pode ser feita em 3 formas : **client-side, server-side, server-side generation.**
+- Cookies são semi-side ou seja, conseguimos acessar tanto em back-end quanto front-end já o localstorage somente no front.
